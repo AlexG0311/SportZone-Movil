@@ -1,0 +1,58 @@
+{
+  "expo": {
+    "name": "escenarios-deportivos",
+    "slug": "escenarios-deportivos",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "config": {
+        "googleMapsApiKey": "AIzaSyBIujh25xtRi5la_Xj_D58GAB9NpHkQxFo"
+      }
+    },
+    "expo": {
+      "plugins": [
+        "react-native-maps",
+        {
+          "iosGoogleMapsApiKey": "AIzaSyBIujh25xtRi5la_Xj_D58GAB9NpHkQxFo",
+          "androidGoogleMapsApiKey": "AIzaSyBIujh25xtRi5la_Xj_D58GAB9NpHkQxFo"
+        }
+      ]
+    },
+    "android": {
+      "package": "com.anonymous.escenariosdeportivos"
+    }
+  },
+  "android": {
+    "adaptiveIcon": {
+      "foregroundImage": "./assets/adaptive-icon.png",
+      "backgroundColor": "#ffffff"
+    },
+    "edgeToEdgeEnabled": true,
+    "predictiveBackGestureEnabled": false,
+    "config": {
+      "googleMaps": {
+        "apiKey": "AIzaSyBIujh25xtRi5la_Xj_D58GAB9NpHkQxFo"
+      }
+    },
+    "permissions": [
+      "ACCESS_COARSE_LOCATION",
+      "ACCESS_FINE_LOCATION"
+    ]
+  },
+  "web": {
+    "favicon": "./assets/favicon.png"
+  },
+  "plugins": [
+    "expo-router"
+  ],
+  "scheme": "escenarios-deportivos"
+}
