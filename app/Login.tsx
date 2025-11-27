@@ -26,7 +26,7 @@ export default function Login() {
 
             if (result.res && result.res.ok) {
                 setUser(result.data);
-                router.replace("/(tabs)/escenarios");
+                router.replace("/Maps");
             } else {
                 Alert.alert("Error", "Credenciales incorrectas. Intenta nuevamente.");
             }
@@ -51,7 +51,7 @@ export default function Login() {
                     <View style={styles.iconContainer}>
                         <Ionicons name="football" size={50} color="#2196F3" />
                     </View>
-                    <Text style={styles.title}>Escenarios Deportivos</Text>
+                    <Text style={styles.title}>SportZone</Text>
                     <Text style={styles.subtitle}>Reserva tu espacio ideal</Text>
                 </View>
 

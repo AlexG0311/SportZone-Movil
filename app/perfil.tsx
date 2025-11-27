@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
-import { icons } from './(tabs)/icons';
+import { icons } from './icons/icons';
 import { useRouter } from 'expo-router';
 
 export default function Perfil() {
@@ -35,7 +35,7 @@ export default function Perfil() {
 
       
 
-            <Pressable style={styles.menuItem} onPress={() => {router.push('/CrearScenario')}}>
+            <Pressable style={styles.menuItem} onPress={() => {router.push('/EscenarioCreateSteps')}}>
                 <View style={styles.menuContent}>
                     {icons.escenarios({color: '#10B981', size: 24})}
                     <View style={styles.menuTextContainer}>
