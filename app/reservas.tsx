@@ -37,7 +37,7 @@ type Reserva = {
   estado: {
     id: number;
     nombre: string;
-  } | null; // ✅ Permitir null
+  } | null; // 
   usuario: {
     id: number;
     nombre: string;
@@ -84,8 +84,7 @@ export default function Reservas() {
   }, []);
 
   const getEstadoColor = (estado: string | null) => {
-    if (!estado) return "#6B7280"; // ✅ Manejar null
-
+    if (!estado) return "#6B7280"; // 
     switch (estado.toLowerCase()) {
       case "completada":
       case "activa":
@@ -101,7 +100,7 @@ export default function Reservas() {
   };
 
   const getEstadoTexto = (estado: string | null) => {
-    if (!estado) return "Sin estado"; // ✅ Manejar null
+    if (!estado) return "Sin estado"; // 
 
     switch (estado.toLowerCase()) {
       case "completada":

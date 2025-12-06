@@ -56,12 +56,9 @@ export default function Perfil() {
                     <Text style={styles.arrow}>›</Text>
                 </View>
             </Pressable>
-
-       
-
             {/* Botón de cerrar sesión */}
             <Pressable style={styles.logoutButton} onPress={() => {}}>
-                <Text style={styles.logoutText}>Cerrar Sesión</Text>
+                <Text style={styles.logoutText} onPress={() => router.push('/Login')}>Cerrar Sesión</Text>
             </Pressable>
         </ScrollView>
     );

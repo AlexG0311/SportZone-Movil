@@ -15,7 +15,6 @@ import { useAuth } from "./context/AuthContext";
 import { ActivityIndicator } from "react-native";
 import Screen from "./Screen";
 import { Escenario } from "../types/types";
-import { SafeAreaProvider } from "react-native-safe-area-context";
 
 
 export default function MiEscenario() {
@@ -157,7 +156,7 @@ export default function MiEscenario() {
         <View style={styles.actionButtons}>
           <Pressable
             style={styles.editButton}
-            onPress={() => router.push(`/reportes?id=${item.id}`)}
+            onPress={() => router.push(`/reportes/${item.id}`)}
           >
             <Text style={styles.editButtonText}>Reportes</Text>
           </Pressable>

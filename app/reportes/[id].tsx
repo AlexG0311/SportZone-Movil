@@ -10,15 +10,15 @@ import {
   Alert,
 } from "react-native";
 import { useState, useEffect } from "react";
-import { useRouter, Stack } from "expo-router";
+import {  Stack, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "./context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 
 interface Reporte {
   id: number;
   descripcion: string;
   imagenUrl: string | null;
-  fechaReporte: string; // ✅ Cambio: createdAt -> fechaReporte
+  fechaReporte: string;
   usuario: {
     id: number;
     nombre: string;
@@ -31,82 +31,78 @@ interface Reporte {
   };
 }
 
-export default function MisReportes() {
-  const router = useRouter();
+export default function ReportesEscenario() {
+  
   const { user } = useAuth();
+  const { id } = useLocalSearchParams(); // ✅ Ahora usa 'id'
 
   const [reportes, setReportes] = useState<Reporte[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [escenario, setEscenario] = useState<any>(null);
 
   useEffect(() => {
-    if (user) {
-      fetchReportes();
+    if (user && id) {
+      fetchReportesEscenario();
     }
-  }, [user]);
+  }, [user, id]);
 
-  const fetchReportes = async () => {
-    if (!user) return;
+ 
+  const fetchReportesEscenario = async () => {
+    if (!user || !id) return;
 
     try {
-      // Obtener escenarios del usuario
-      const escenariosResponse = await fetch(
-        `https://backend-sportzone-production.up.railway.app/api/escenario/usuario/${user.id}`
+      const escenarioId = Array.isArray(id) ? id[0] : id; // ✅ Usa 'id'
+
+      // 1. Obtener datos del escenario
+      const escenarioResponse = await fetch(
+        `https://backend-sportzone-production.up.railway.app/api/escenario/${escenarioId}`
       );
-      
-      if (!escenariosResponse.ok) {
-        throw new Error('Error al obtener escenarios');
-      }
-      
-      const escenarios = await escenariosResponse.json();
 
-      console.log('Escenarios del usuario:', escenarios); // ✅ Debug
-
-      if (!escenarios || escenarios.length === 0) {
-        setReportes([]);
-        setLoading(false);
-        return;
+      if (!escenarioResponse.ok) {
+        throw new Error('Error al obtener escenario');
       }
 
-      // Obtener reportes de todos los escenarios del usuario
-      const reportesPromises = escenarios.map(async (escenario: any) => {
-        try {
-          const response = await fetch(
-            `https://backend-sportzone-production.up.railway.app/api/reportar/escenario/${escenario.id}`
-          );
-          if (!response.ok) {
-            console.warn(`Error al obtener reportes del escenario ${escenario.id}`);
-            return [];
-          }
-          const data = await response.json();
-          console.log(`Reportes del escenario ${escenario.id}:`, data); // ✅ Debug
-          return data;
-        } catch (error) {
-          console.warn(`Error en escenario ${escenario.id}:`, error);
-          return [];
+      const escenarioData = await escenarioResponse.json();
+      setEscenario(escenarioData);
+
+      // 2. Obtener reportes de este escenario
+      const reportesResponse = await fetch(
+        `https://backend-sportzone-production.up.railway.app/api/reportar/escenario/${escenarioId}`
+      );
+
+      if (!reportesResponse.ok) {
+        throw new Error('Error al obtener reportes');
+      }
+
+      const reportesData = await reportesResponse.json();
+
+      console.log('Reportes del escenario:', reportesData);
+
+      // 3. Enriquecer con datos del escenario
+      const reportesEnriquecidos = reportesData.map((reporte: any) => ({
+        ...reporte,
+        escenario: {
+          id: escenarioData.id,
+          nombre: escenarioData.nombre,
+          direccion: escenarioData.direccion || 'Sin dirección'
         }
-      });
+      }));
 
-      const reportesArrays = await Promise.all(reportesPromises);
-      const todosLosReportes = reportesArrays.flat();
-
-      console.log('Total de reportes:', todosLosReportes); // ✅ Debug
-
-      // ✅ Filtrar reportes válidos (con escenario y usuario)
-      const reportesValidos = todosLosReportes.filter(
-        (reporte) => reporte.escenario && reporte.usuario
+      // 4. Filtrar válidos y ordenar
+      const reportesValidos = reportesEnriquecidos.filter(
+        (reporte: any) => reporte.escenario && reporte.usuario
       );
 
-      // Ordenar por fecha más reciente
       reportesValidos.sort(
-        (a, b) =>
-          new Date(b.fechaReporte).getTime() - new Date(a.fechaReporte).getTime() // ✅ Cambio
+        (a: any, b: any) =>
+          new Date(b.fechaReporte).getTime() - new Date(a.fechaReporte).getTime()
       );
 
       setReportes(reportesValidos);
     } catch (error) {
       console.error("Error al cargar reportes:", error);
-      Alert.alert("Error", "No se pudieron cargar los reportes");
+      Alert.alert("Error", "No se pudieron cargar los reportes del escenario");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -115,7 +111,7 @@ export default function MisReportes() {
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchReportes();
+    fetchReportesEscenario();
   };
 
   const formatearFecha = (fecha: string) => {
@@ -139,7 +135,7 @@ export default function MisReportes() {
     Alert.alert(
       "Detalle del Reporte",
       `Escenario: ${reporte.escenario.nombre}\n\nReportado por: ${reporte.usuario.nombre}\n\nFecha: ${formatearFecha(
-        reporte.fechaReporte // ✅ Cambio
+        reporte.fechaReporte
       )}\n\nDescripción:\n${reporte.descripcion}`,
       [
         {
@@ -147,15 +143,19 @@ export default function MisReportes() {
           style: "cancel",
         },
         {
-          text: "Ver Escenario",
-          onPress: () => router.push(`/${reporte.escenario.id}`),
+          text: "Ver Imagen Completa",
+          onPress: () => {
+            if (reporte.imagenUrl) {
+              // Puedes abrir la imagen en modal o navegador
+              Alert.alert("Imagen", reporte.imagenUrl);
+            }
+          },
         },
       ]
     );
   };
 
   const renderReporte = ({ item }: { item: Reporte }) => {
-    // ✅ Validación adicional de seguridad
     if (!item.escenario || !item.usuario) {
       console.warn('Reporte con datos incompletos:', item);
       return null;
@@ -169,12 +169,12 @@ export default function MisReportes() {
       >
         <View style={styles.reporteHeader}>
           <View style={styles.headerLeft}>
-            <Ionicons name="alert-circle" size={24} color="#371d1dff" />
+            <Ionicons name="alert-circle" size={24} color="#EF4444" />
             <View style={styles.headerInfo}>
               <Text style={styles.escenarioNombre} numberOfLines={1}>
                 {item.escenario.nombre}
               </Text>
-              <Text style={styles.fecha}>{formatearFecha(item.fechaReporte)}</Text> 
+              <Text style={styles.fecha}>{formatearFecha(item.fechaReporte)}</Text>
             </View>
           </View>
           <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
@@ -213,7 +213,7 @@ export default function MisReportes() {
       <Ionicons name="checkmark-circle-outline" size={80} color="#D1D5DB" />
       <Text style={styles.emptyTitle}>No hay reportes</Text>
       <Text style={styles.emptyText}>
-        Tus escenarios no tienen reportes de daños en este momento
+        Este escenario no tiene reportes de daños
       </Text>
     </View>
   );
@@ -223,7 +223,7 @@ export default function MisReportes() {
       <View style={[styles.container, styles.centered]}>
         <Stack.Screen
           options={{
-            title: "Reportes de Mis Escenarios",
+            title: "Reportes del Escenario",
             headerStyle: {
               backgroundColor: "#10B981",
             },
@@ -243,7 +243,7 @@ export default function MisReportes() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: "Reportes de Mis Escenarios",
+          title: escenario ? `Reportes - ${escenario.nombre}` : "Reportes",
           headerStyle: {
             backgroundColor: "#10B981",
           },
@@ -254,6 +254,17 @@ export default function MisReportes() {
         }}
       />
 
+      {/* Info del escenario */}
+      {escenario && (
+        <View style={styles.escenarioInfo}>
+          <Ionicons name="location" size={24} color="#10B981" />
+          <View style={styles.escenarioTexts}>
+            <Text style={styles.infoNombre}>{escenario.nombre}</Text>
+            <Text style={styles.infoDireccion}>{escenario.direccion}</Text>
+          </View>
+        </View>
+      )}
+
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{reportes.length}</Text>
@@ -261,7 +272,9 @@ export default function MisReportes() {
         </View>
         <View style={[styles.statCard, styles.statCardDanger]}>
           <Ionicons name="warning" size={32} color="#EF4444" />
-          <Text style={styles.statLabel}>Requieren Atención</Text>
+          <Text style={styles.statLabel}>
+            {reportes.length > 0 ? "Requieren Atención" : "Sin Reportes"}
+          </Text>
         </View>
       </View>
 
@@ -298,6 +311,34 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 16,
     color: "#6B7280",
+  },
+  escenarioInfo: {
+    backgroundColor: "#fff",
+    padding: 16,
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  escenarioTexts: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  infoNombre: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#111827",
+  },
+  infoDireccion: {
+    fontSize: 14,
+    color: "#6B7280",
+    marginTop: 4,
   },
   statsContainer: {
     flexDirection: "row",

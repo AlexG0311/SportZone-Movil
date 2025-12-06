@@ -212,7 +212,7 @@ export default function EscenarioCreateSteps() {
         [
           {
             text: 'OK',
-            onPress: () => router.push('/(tabs)/escenarios'),
+            onPress: () => router.push('/miEscenario'),
           },
         ]
       );
